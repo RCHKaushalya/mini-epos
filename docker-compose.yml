@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: miniepos
+      POSTGRES_USER: miniepos
+      POSTGRES_PASSWORD: miniepos
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miniepos -d miniepos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/miniepos
+      DB_USER: miniepos
+      DB_PASSWORD: miniepos
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
