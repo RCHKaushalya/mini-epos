@@ -4,19 +4,27 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'Code already on disk for now'
+                echo 'Checking out code...'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Images') {
             steps {
-                sh 'docker compose build'
+                sh '''
+                    eval $(minikube docker-env)
+                    docker build -t mini-epos-backend:latest ./backend
+                    docker build -t mini-epos-frontend:latest ./frontend
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
-                sh 'docker compose up -d'
+                sh '''
+                    kubectl apply -f k8s/
+                    kubectl rollout restart deployment/backend
+                    kubectl rollout restart deployment/frontend
+                '''
             }
         }
     }
